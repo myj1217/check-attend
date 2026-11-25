@@ -9,10 +9,13 @@ exports/*
 reports/*
 !reports/.gitkeep
 
-# 실제 모임 인원 및 오프라인 참석자 명단 (필요시 주석 해제하여 관리)
+# 실제 모임 인원 및 오프라인 참석자 명단 (로컬 전용)
 members.json
 offline_attendance.json
-# holidays.json
+
+# 예시 파일은 Git으로 관리
+!members.example.json
+!offline_attendance.example.json
 
 # ==========================================
 # 2. Python 및 가상환경
