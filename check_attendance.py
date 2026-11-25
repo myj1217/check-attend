@@ -42,6 +42,36 @@ def get_app_dir() -> Path:
     return Path(__file__).resolve().parent
 
 
+def ensure_json_file(
+    target_path: Path,
+    example_path: Path,
+    default_data: object,
+) -> None:
+    """대상 JSON이 없으면 .example.json을 참고해 생성하고, 없으면 기본값으로 생성"""
+    if target_path.exists():
+        return
+
+    if example_path.exists():
+        try:
+            example_text = example_path.read_text(encoding="utf-8")
+            json.loads(example_text)  # JSON 형식 유효성 확인
+            target_path.write_text(example_text, encoding="utf-8")
+            print(
+                f"{target_path.name}이 없어 {example_path.name}을 참고해 생성했습니다: {target_path}"
+            )
+            return
+        except Exception as exc:
+            print(
+                f"{example_path.name}을 읽는 중 문제가 발생해 기본값으로 생성합니다 ({exc})"
+            )
+
+    target_path.write_text(
+        json.dumps(default_data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(f"{target_path.name}이 없어 기본 파일을 생성했습니다: {target_path}")
+
+
 def parse_to_24h(ampm: str, hour: int, minute: int) -> tuple[int, int]:
     if ampm == "오전":
         h = 0 if hour == 12 else hour
@@ -438,10 +468,12 @@ def main() -> None:
     reports_dir = app_dir / "reports"
     exports_dir.mkdir(exist_ok=True)
 
+    ensure_json_file(
+        target_path=app_dir / "members.json",
+        example_path=app_dir / "members.example.json",
+        default_data=["홍길동", "성춘향"],
+    )
     members_path = app_dir / "members.json"
-    if not members_path.exists():
-        members_path.write_text('["홍길동", "성춘향"]\n', encoding="utf-8")
-        print(f"members.json이 없어 기본 파일을 생성했습니다: {members_path}")
 
     holidays_path = app_dir / "holidays.json"
     if not holidays_path.exists():
@@ -451,13 +483,12 @@ def main() -> None:
         )
         print(f"holidays.json이 없어 기본 파일을 생성했습니다: {holidays_path}")
 
+    ensure_json_file(
+        target_path=app_dir / "offline_attendance.json",
+        example_path=app_dir / "offline_attendance.example.json",
+        default_data=DEFAULT_OFFLINE_ATTENDANCE,
+    )
     offline_path = app_dir / "offline_attendance.json"
-    if not offline_path.exists():
-        offline_path.write_text(
-            json.dumps(DEFAULT_OFFLINE_ATTENDANCE, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        print(f"offline_attendance.json이 없어 기본 파일을 생성했습니다: {offline_path}")
 
     members = json.loads(members_path.read_text(encoding="utf-8"))
     if not members:
